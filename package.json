@@ -1,0 +1,235 @@
+{
+  "name": "mcfunction-formatter",
+  "displayName": "mcfunction Formatter",
+  "description": "Minecraft Java Edition (1.21+) のデータパック用 mcfunction フォーマッター",
+  "version": "0.1.0",
+  "publisher": "local",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Formatters"
+  ],
+  "activationEvents": [
+    "onLanguage:mcfunction"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "mcfunction",
+        "extensions": [
+          ".mcfunction"
+        ]
+      }
+    ],
+    "configurationDefaults": {
+      "[mcfunction]": {
+        "editor.defaultFormatter": "local.mcfunction-formatter"
+      }
+    },
+    "configuration": {
+      "title": "mcfunction Formatter",
+      "properties": {
+        "mcfunctionFormatter.indent.enabled": {
+          "type": "boolean",
+          "default": true,
+          "order": 0,
+          "markdownDescription": "コメントの `#` の数に応じてインデントします。オフにすると各行の元のインデントを保ちます。"
+        },
+        "mcfunctionFormatter.indent.size": {
+          "type": "integer",
+          "minimum": -1,
+          "default": -1,
+          "order": 1,
+          "markdownDescription": "`#` インデント1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+        },
+        "mcfunctionFormatter.indent.style": {
+          "type": "string",
+          "enum": [
+            "signs",
+            "nested"
+          ],
+          "enumDescriptions": [
+            "`##` 以上の見出しの `#` の数で段数を決める (`##` の下は1段、`###` の下は2段)。`#` 1個は普通のコメント。空行1行でインデントが1段戻る。見出しは1段ずつしか深くできず (多すぎる `#` は減らす)、見出しの前の空行は見出しの高さまで戻るのに必要な数ちょうどにする",
+            "MC-Datapack-Utility と同じ。`#` コメントごとに1段深くなり、空行で1段戻る"
+          ],
+          "default": "signs",
+          "order": 2,
+          "description": "コメントによるインデントの決め方"
+        },
+        "mcfunctionFormatter.mcmeta.enabled": {
+          "type": "boolean",
+          "default": true,
+          "order": 3,
+          "markdownDescription": "データパックの `pack.mcmeta` (`pack_format` / `min_format` / `max_format`) からゲームバージョンを判定し、そのバージョンのコマンド構文を [misode/mcmeta](https://github.com/misode/mcmeta) から取得します (GitHub に接続し、取得したデータは保存して使い回します)。オフにする、または取得できない場合、`execute` はサブコマンドごとに分けず普通のコマンドとして整形します。"
+        },
+        "mcfunctionFormatter.header.enabled": {
+          "type": "boolean",
+          "default": true,
+          "order": 2,
+          "markdownDescription": "`data/<namespace>/function/<path>.mcfunction` から `#> namespace:path` ヘッダーを挿入します。既存のヘッダーのパスが違う場合は上書きします。"
+        },
+        "mcfunctionFormatter.command.keepLineBreaks": {
+          "type": "boolean",
+          "default": true,
+          "order": 9,
+          "markdownDescription": "普通のコマンド (サブコマンドごとに分けない `execute` を含む) で、語と語の間に `\\` で入れた改行を残します。続きの行は1段下げて揃えます。オフにすると1行にまとめます。"
+        },
+        "mcfunctionFormatter.execute.mode": {
+          "type": "string",
+          "enum": [
+            "expand",
+            "format",
+            "none"
+          ],
+          "enumDescriptions": [
+            "サブコマンドごとに改行して展開する",
+            "1行にまとめる",
+            "書かれたまま残す"
+          ],
+          "default": "expand",
+          "order": 10,
+          "description": "execute コマンドの整形方法"
+        },
+        "mcfunctionFormatter.execute.threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "order": 11,
+          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まるサブコマンドは同じ行に並べます。コマンド全体が収まる場合は1行のままにします。`0` ならサブコマンドごとに改行します。"
+        },
+        "mcfunctionFormatter.execute.indentSize": {
+          "type": "integer",
+          "minimum": -1,
+          "default": -1,
+          "order": 12,
+          "markdownDescription": "execute の継続行1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+        },
+        "mcfunctionFormatter.selector.mode": {
+          "type": "string",
+          "enum": [
+            "expand",
+            "format",
+            "none"
+          ],
+          "enumDescriptions": [
+            "引数ごとに改行して展開する",
+            "1行のまま空白だけ整える",
+            "書かれたまま残す"
+          ],
+          "default": "format",
+          "order": 20,
+          "markdownDescription": "セレクター (`@e[...]` など) と、その中の `scores={...}` / `advancements={...}` の整形方法"
+        },
+        "mcfunctionFormatter.selector.threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "order": 21,
+          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まる引数は同じ行に並べます。全体が収まる場合は1行のままにします。"
+        },
+        "mcfunctionFormatter.selector.indentSize": {
+          "type": "integer",
+          "minimum": -1,
+          "default": -1,
+          "order": 22,
+          "markdownDescription": "セレクターを展開したときの1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+        },
+        "mcfunctionFormatter.selector.equalsSpaces": {
+          "type": "integer",
+          "minimum": -1,
+          "default": 0,
+          "order": 23,
+          "markdownDescription": "セレクターの `=` と、ブロックステート・アイテムコンポーネントの `=` / `~` の前後に入れる空白の数 (`1` なら `type = zombie`)。`-1` のときは書かれたままにします。"
+        },
+        "mcfunctionFormatter.selector.commaSpaces": {
+          "type": "integer",
+          "minimum": -1,
+          "default": 1,
+          "order": 24,
+          "markdownDescription": "セレクターの引数を同じ行に並べるとき、`,` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+        },
+        "mcfunctionFormatter.nbt.mode": {
+          "type": "string",
+          "enum": [
+            "expand",
+            "format",
+            "none"
+          ],
+          "enumDescriptions": [
+            "要素ごとに改行して展開する",
+            "1行のままキーのクォートと空白だけ整える",
+            "書かれたまま残す"
+          ],
+          "default": "expand",
+          "order": 30,
+          "description": "NBT / JSON (テキストコンポーネント、マクロ引数など) の整形方法"
+        },
+        "mcfunctionFormatter.nbt.threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "order": 31,
+          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まる要素は同じ行に並べます。全体が収まる場合は1行のままにします。"
+        },
+        "mcfunctionFormatter.nbt.indentSize": {
+          "type": "integer",
+          "minimum": -1,
+          "default": -1,
+          "order": 32,
+          "markdownDescription": "NBT を展開したときの1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+        },
+        "mcfunctionFormatter.nbt.quoteKeys": {
+          "type": "boolean",
+          "default": false,
+          "order": 33,
+          "markdownDescription": "NBT のキーを `\"` でくくります (`{text:\"a\"}` → `{\"text\": \"a\"}`)。"
+        },
+        "mcfunctionFormatter.nbt.colonSpaces": {
+          "type": "integer",
+          "minimum": -1,
+          "default": 1,
+          "order": 34,
+          "markdownDescription": "NBT のキーの後の `:` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+        },
+        "mcfunctionFormatter.nbt.commaSpaces": {
+          "type": "integer",
+          "minimum": -1,
+          "default": 1,
+          "order": 35,
+          "markdownDescription": "NBT の要素を同じ行に並べるとき、`,` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+        },
+        "mcfunctionFormatter.attached.mode": {
+          "type": "string",
+          "enum": [
+            "expand",
+            "format",
+            "none"
+          ],
+          "enumDescriptions": [
+            "中の NBT を nbt.mode に従って展開する",
+            "1行のまま `=` / `~` の空白と中の NBT だけ整える",
+            "書かれたまま残す"
+          ],
+          "default": "format",
+          "order": 40,
+          "markdownDescription": "語にくっついた `{...}` / `[...]` (ブロックステート、アイテムコンポーネント、ブロックエンティティの NBT、`A[{B:true}]` のような NBT パス) の整形方法"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run",
+    "package": "npm run compile && npx --yes @vscode/vsce@3.2.2 package --allow-missing-repository --skip-license"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  }
+}
