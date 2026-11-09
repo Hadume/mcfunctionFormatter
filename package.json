@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "publisher": "local",
   "private": true,
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -224,9 +225,11 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "vitest run",
+    "icon": "node scripts/render-icon.mjs",
     "package": "npm run compile && npx --yes @vscode/vsce@3.2.2 package --allow-missing-repository --skip-license"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.90.0",
     "typescript": "^5.6.3",

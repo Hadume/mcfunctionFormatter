@@ -4,5 +4,8 @@ node_modules/**
 .vscode/**
 tsconfig.json
 .gitignore
+.gitattributes
+scripts/**
+images/*.svg
 *.vsix
 **/*.map
