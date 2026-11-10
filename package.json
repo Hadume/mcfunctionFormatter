@@ -60,12 +60,6 @@
           "order": 2,
           "description": "コメントによるインデントの決め方"
         },
-        "mcfunctionFormatter.mcmeta.enabled": {
-          "type": "boolean",
-          "default": true,
-          "order": 3,
-          "markdownDescription": "データパックの `pack.mcmeta` (`pack_format` / `min_format` / `max_format`) からゲームバージョンを判定し、そのバージョンのコマンド構文を [misode/mcmeta](https://github.com/misode/mcmeta) から取得します (GitHub に接続し、取得したデータは保存して使い回します)。オフにする、または取得できない場合、`execute` はサブコマンドごとに分けず普通のコマンドとして整形します。"
-        },
         "mcfunctionFormatter.header.enabled": {
           "type": "boolean",
           "default": true,
@@ -94,13 +88,6 @@
           "order": 10,
           "description": "execute コマンドの整形方法"
         },
-        "mcfunctionFormatter.execute.threshold": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0,
-          "order": 11,
-          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まるサブコマンドは同じ行に並べます。コマンド全体が収まる場合は1行のままにします。`0` ならサブコマンドごとに改行します。"
-        },
         "mcfunctionFormatter.execute.indentSize": {
           "type": "integer",
           "minimum": -1,
@@ -124,13 +111,6 @@
           "order": 20,
           "markdownDescription": "セレクター (`@e[...]` など) と、その中の `scores={...}` / `advancements={...}` の整形方法"
         },
-        "mcfunctionFormatter.selector.threshold": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0,
-          "order": 21,
-          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まる引数は同じ行に並べます。全体が収まる場合は1行のままにします。"
-        },
         "mcfunctionFormatter.selector.indentSize": {
           "type": "integer",
           "minimum": -1,
@@ -148,7 +128,7 @@
         "mcfunctionFormatter.selector.commaSpaces": {
           "type": "integer",
           "minimum": -1,
-          "default": 1,
+          "default": 0,
           "order": 24,
           "markdownDescription": "セレクターの引数を同じ行に並べるとき、`,` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
         },
@@ -167,13 +147,6 @@
           "default": "expand",
           "order": 30,
           "description": "NBT / JSON (テキストコンポーネント、マクロ引数など) の整形方法"
-        },
-        "mcfunctionFormatter.nbt.threshold": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0,
-          "order": 31,
-          "markdownDescription": "`expand` のときの1行の最大文字数 (インデントを除く)。この長さに収まる要素は同じ行に並べます。全体が収まる場合は1行のままにします。"
         },
         "mcfunctionFormatter.nbt.indentSize": {
           "type": "integer",

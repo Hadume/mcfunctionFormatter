@@ -14,10 +14,10 @@ export interface FormatOptions {
     header: { enabled: boolean };
     /** Commands other than a split `execute`: keep the `\` line breaks written between their words. */
     command: { keepLineBreaks: boolean };
-    execute: { mode: Mode; threshold: number; indentSize: number };
+    execute: { mode: Mode; indentSize: number };
     /** Applies to selector arguments and to `scores` / `advancements` maps inside them. */
-    selector: { mode: Mode; threshold: number; indentSize: number; equalsSpaces: number; commaSpaces: number };
-    nbt: { mode: Mode; threshold: number; indentSize: number; quoteKeys: boolean; colonSpaces: number; commaSpaces: number };
+    selector: { mode: Mode; indentSize: number; equalsSpaces: number; commaSpaces: number };
+    nbt: { mode: Mode; indentSize: number; quoteKeys: boolean; colonSpaces: number; commaSpaces: number };
     /** `{...}` / `[...]` attached to a word: block states, item components, block entity NBT, NBT paths. */
     attached: { mode: Mode };
     /**
@@ -36,9 +36,9 @@ export const defaultOptions: FormatOptions = {
     indent: { enabled: true, size: -1, style: 'signs' },
     header: { enabled: true },
     command: { keepLineBreaks: true },
-    execute: { mode: 'expand', threshold: 0, indentSize: -1 },
-    selector: { mode: 'format', threshold: 0, indentSize: -1, equalsSpaces: 0, commaSpaces: 1 },
-    nbt: { mode: 'expand', threshold: 0, indentSize: -1, quoteKeys: false, colonSpaces: 1, commaSpaces: 1 },
+    execute: { mode: 'expand', indentSize: -1 },
+    selector: { mode: 'format', indentSize: -1, equalsSpaces: 0, commaSpaces: 0 },
+    nbt: { mode: 'expand', indentSize: -1, quoteKeys: false, colonSpaces: 1, commaSpaces: 1 },
     attached: { mode: 'format' },
 };
 

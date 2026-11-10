@@ -7,8 +7,6 @@ export interface Line {
 }
 
 export interface Node {
-    /** Everything on one line (only `none` parts keep their original text). Used for thresholds. */
-    flat(): string;
     render(indent: string): Line[];
 }
 
@@ -20,28 +18,16 @@ export function join(a: Line[], b: Line[], sep = ''): Line[] {
     return out;
 }
 
-/**
- * Lays out pieces one per line at `indent`, except that single-line pieces are packed
- * onto the previous line while it stays within `threshold` characters (indentation excluded).
- */
-function pack(lines: Line[], pieces: Line[][], indent: string, threshold: number, gap = ' '): void {
-    let current: Line | null = null;
+/** Lays out pieces one per line at `indent`. */
+function stack(lines: Line[], pieces: Line[][], indent: string): void {
     for (const piece of pieces) {
-        if (piece.length === 1 && current && current.text.length + gap.length + piece[0].text.length <= threshold) {
-            current.text += gap + piece[0].text;
-            continue;
-        }
         piece[0] = { indent, text: piece[0].text };
         lines.push(...piece);
-        current = piece.length === 1 ? lines[lines.length - 1] : null;
     }
 }
 
 export class Text implements Node {
     constructor(readonly value: string) {}
-    flat(): string {
-        return this.value;
-    }
     render(indent: string): Line[] {
         return [{ indent, text: this.value }];
     }
@@ -49,9 +35,6 @@ export class Text implements Node {
 
 export class Concat implements Node {
     constructor(readonly parts: Node[]) {}
-    flat(): string {
-        return this.parts.map(p => p.flat()).join('');
-    }
     render(indent: string): Line[] {
         return this.parts.reduce<Line[]>((acc, p) => join(acc, p.render(indent)), [{ indent, text: '' }]);
     }
@@ -68,12 +51,6 @@ export class Words implements Node {
         /** Indentation added to lines continued at a `LINE_BREAK`. */
         readonly unit = '',
     ) {}
-    flat(): string {
-        return this.words.map((w, k) => (k ? this.sep(k) : '') + w.flat()).join('');
-    }
-    private sep(k: number): string {
-        return this.seps[k - 1] === LINE_BREAK ? ' ' : this.seps[k - 1];
-    }
     render(indent: string): Line[] {
         let lines = this.words[0].render(indent);
         for (let k = 1; k < this.words.length; k++) {
@@ -91,9 +68,6 @@ export class Words implements Node {
 /** `key=value` in selectors, `key: value` in NBT. */
 export class Pair implements Node {
     constructor(readonly key: string, readonly sep: string, readonly value: Node) {}
-    flat(): string {
-        return this.key + this.sep + this.value.flat();
-    }
     render(indent: string): Line[] {
         return join([{ indent, text: this.key + this.sep }], this.value.render(indent));
     }
@@ -109,7 +83,6 @@ export class Block implements Node {
         readonly close: string,
         readonly raw: string,
         readonly mode: Mode,
-        readonly threshold: number,
         readonly unit: string,
         /** Spaces after each comma; -1 keeps `seps`. */
         readonly commaSpaces: number,
@@ -127,14 +100,9 @@ export class Block implements Node {
         return this.commaSpaces < 0 ? this.seps[k - 1] : ',' + ' '.repeat(this.commaSpaces);
     }
 
-    flat(): string {
-        if (this.mode === 'none') return this.raw;
-        return this.head() + this.items.map((item, k) => (k ? this.sep(k) : '') + item.flat()).join('') + this.close;
-    }
-
     render(indent: string): Line[] {
         if (this.mode === 'none') return [{ indent, text: this.raw }];
-        if (this.mode === 'expand' && this.items.length && this.flat().length > this.threshold) {
+        if (this.mode === 'expand' && this.items.length) {
             const inner = indent + this.unit;
             const lines: Line[] = [{ indent, text: this.open + this.prefix }];
             const pieces = this.items.map((item, k) => {
@@ -142,7 +110,7 @@ export class Block implements Node {
                 if (k < this.items.length - 1) r[r.length - 1].text += ',';
                 return r;
             });
-            pack(lines, pieces, inner, this.threshold, ' '.repeat(this.commaSpaces < 0 ? 1 : this.commaSpaces));
+            stack(lines, pieces, inner);
             lines.push({ indent, text: this.close });
             return lines;
         }
@@ -165,17 +133,11 @@ export class Execute implements Node {
         /** Original separators between consecutive tokens (words, then the command). */
         readonly rawGaps: string[],
         readonly mode: Mode,
-        readonly threshold: number,
         readonly unit: string,
     ) {}
 
     private tokens(): Node[] {
         return this.command ? [...this.words, this.command] : this.words;
-    }
-
-    flat(): string {
-        if (this.mode === 'none') return this.tokens().map((t, k) => (k ? this.rawGaps[k - 1] : '') + t.flat()).join('');
-        return this.tokens().map(t => t.flat()).join(' ');
     }
 
     render(indent: string): Line[] {
@@ -185,7 +147,7 @@ export class Execute implements Node {
             for (let k = 1; k < tokens.length; k++) lines = join(lines, tokens[k].render(indent), this.rawGaps[k - 1]);
             return lines;
         }
-        if (this.mode === 'format' || this.segmentStarts.length === 0 || this.flat().length <= this.threshold) {
+        if (this.mode === 'format' || this.segmentStarts.length === 0) {
             let lines = tokens[0].render(indent);
             for (let k = 1; k < tokens.length; k++) lines = join(lines, tokens[k].render(indent), ' ');
             return lines;
@@ -199,7 +161,7 @@ export class Execute implements Node {
             if (end === this.words.length && this.command) seg = join(seg, this.command.render(inner), ' ');
             return seg;
         });
-        pack(lines, pieces, inner, this.threshold);
+        stack(lines, pieces, inner);
         return lines;
     }
 }

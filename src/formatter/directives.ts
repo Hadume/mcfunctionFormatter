@@ -5,12 +5,12 @@ import { FormatOptions, Mode } from './options';
  *
  * - key: `ignore` (leave as written), `expand`, `flat` (one line, tidied only)
  * - scope: none (the next command), `section` (the rest of this `#` section, not its
- *   child sections), `deep` (this section and its child sections)
+ *   child sections), `all` (this section and its child sections)
  * - kinds: `execute`, `selector`, `nbt`, `attached`, comma separated; all when omitted
  *
- * e.g. `#ignore`, `#flat-section`, `#expand-deep: nbt, selector`
+ * e.g. `#ignore`, `#flat-section`, `#expand-all: nbt, selector`
  */
-const DIRECTIVE = /^#(ignore|expand|flat)(?:-(section|deep))?(?:\s*:\s*([a-z]+(?:\s*,\s*[a-z]+)*))?\s*$/i;
+const DIRECTIVE = /^#(ignore|expand|flat)(?:-(section|all))?(?:\s*:\s*([a-z]+(?:\s*,\s*[a-z]+)*))?\s*$/i;
 
 const KINDS = ['execute', 'selector', 'nbt', 'attached'] as const;
 type Kind = (typeof KINDS)[number];
@@ -22,7 +22,7 @@ export interface Overrides extends Partial<Record<Kind, Mode>> {
 }
 
 export interface Directive {
-    scope: 'command' | 'section' | 'deep';
+    scope: 'command' | 'section' | 'all';
     overrides: Overrides;
 }
 

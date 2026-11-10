@@ -138,8 +138,8 @@ export class Parser {
             words.push(word.node);
             i = word.end;
         }
-        const { mode, threshold, indentSize } = this.opts.execute;
-        return new Execute(words, segmentStarts, command, rawGaps, mode, threshold, indentString(this.opts, indentSize));
+        const { mode, indentSize } = this.opts.execute;
+        return new Execute(words, segmentStarts, command, rawGaps, mode, indentString(this.opts, indentSize));
     }
 
     // ---- words ----
@@ -316,7 +316,7 @@ export class Parser {
 
     /** `[key=value, ...]` or `{key=value, ...}`. `braces` decides what a `{` value is for each key. */
     private parseKeyValues(p: number, close: string, braces: (key: string) => 'map' | 'nbt'): Parsed | null {
-        const { mode, threshold, indentSize, equalsSpaces, commaSpaces } = this.opts.selector;
+        const { mode, indentSize, equalsSpaces, commaSpaces } = this.opts.selector;
         const s = this.s;
         const items: Node[] = [];
         const seps: string[] = [];
@@ -360,7 +360,7 @@ export class Parser {
             else if (s[i] !== close) return null;
         }
         const unit = indentString(this.opts, indentSize);
-        return { node: new Block(s[p], '', items, close, this.line.raw(p, i), mode, threshold, unit, commaSpaces, seps), end: i };
+        return { node: new Block(s[p], '', items, close, this.line.raw(p, i), mode, unit, commaSpaces, seps), end: i };
     }
 
     // ---- NBT ----
@@ -419,9 +419,9 @@ export class Parser {
     }
 
     private nbtBlock(open: string, prefix: string, items: Node[], close: string, start: number, end: number, seps: string[]): Block {
-        const { threshold, indentSize } = this.opts.nbt;
+        const { indentSize } = this.opts.nbt;
         const mode = this.flatNbt && this.opts.nbt.mode === 'expand' ? 'format' : this.opts.nbt.mode;
-        return new Block(open, prefix, items, close, this.line.raw(start, end), mode, threshold, indentString(this.opts, indentSize), this.opts.nbt.commaSpaces, seps);
+        return new Block(open, prefix, items, close, this.line.raw(start, end), mode, indentString(this.opts, indentSize), this.opts.nbt.commaSpaces, seps);
     }
 
     private parseList(p: number): Parsed | null {

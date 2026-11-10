@@ -17,7 +17,7 @@ Minecraft Java Edition 1.21 以降のデータパック用 `.mcfunction` フォ�
 - コマンド構文は [misode/mcmeta](https://github.com/misode/mcmeta) から取得し、拡張機能の保存領域に保存して使い回します（バージョン一覧は1日ごとに更新）。
 - 使い道：`execute` のサブコマンドの区切り（引数の数を数えるので、スコア名が `run` などでも誤らない）と、自由テキストを取る引数（`say` / `tell` / `kick` の理由など）の判定。
 
-`mcmeta.enabled` をオフにした場合や、`pack.mcmeta` が見つからない・オフラインで取得できない場合は、`execute` をサブコマンドごとに分けず、普通のコマンドとして整形します（NBT・セレクターなどの整形はこれまでどおり）。
+`pack.mcmeta` が見つからない・オフラインで取得できない場合は、`execute` をサブコマンドごとに分けず、普通のコマンドとして整形します（NBT・セレクターなどの整形はこれまでどおり）。
 
 データの出典: [misode/mcmeta](https://github.com/misode/mcmeta)（Minecraft のデータ生成機能から作られた非公式データ）
 
@@ -84,13 +84,12 @@ npm run package # mcfunction-formatter-0.1.0.vsix を作る
 |---|---|---|
 | `mcfunctionFormatter.indent.enabled` / `.size` | `true` / `-1` | `#` インデント。オフにすると元のインデントを保つ |
 | `mcfunctionFormatter.header.enabled` | `true` | ヘッダーの挿入・上書き |
-| `mcfunctionFormatter.mcmeta.enabled` | `true` | ゲームバージョンのコマンド構文を misode/mcmeta から取得する |
 | `mcfunctionFormatter.command.keepLineBreaks` | `true` | 普通のコマンドで語と語の間に `\` で入れた改行を残す（続きの行は1段下げる）。オフで1行にまとめる |
-| `mcfunctionFormatter.execute.mode` / `.threshold` / `.indentSize` | `expand` / `0` / `-1` | execute |
-| `mcfunctionFormatter.selector.mode` / `.threshold` / `.indentSize` | `format` / `0` / `-1` | セレクターと、その中の `scores` / `advancements` |
+| `mcfunctionFormatter.execute.mode` / `.indentSize` | `expand` / `-1` | execute |
+| `mcfunctionFormatter.selector.mode` / `.indentSize` | `format` / `-1` | セレクターと、その中の `scores` / `advancements` |
 | `mcfunctionFormatter.selector.equalsSpaces` | `0` | `=` の前後の空白の数（`-1` で書かれたまま） |
-| `mcfunctionFormatter.selector.commaSpaces` | `1` | 同じ行に並べるときの `,` の後ろの空白の数（`-1` で書かれたまま） |
-| `mcfunctionFormatter.nbt.mode` / `.threshold` / `.indentSize` | `expand` / `0` / `-1` | NBT / JSON |
+| `mcfunctionFormatter.selector.commaSpaces` | `0` | 同じ行に並べるときの `,` の後ろの空白の数（`-1` で書かれたまま） |
+| `mcfunctionFormatter.nbt.mode` / `.indentSize` | `expand` / `-1` | NBT / JSON |
 | `mcfunctionFormatter.nbt.quoteKeys` | `false` | キーを `"` でくくる |
 | `mcfunctionFormatter.nbt.colonSpaces` | `1` | `:` の後ろの空白の数（`-1` で書かれたまま） |
 | `mcfunctionFormatter.nbt.commaSpaces` | `1` | 同じ行に並べるときの `,` の後ろの空白の数（`-1` で書かれたまま） |
@@ -100,18 +99,9 @@ npm run package # mcfunction-formatter-0.1.0.vsix を作る
 
 モード:
 
-- `expand`: 改行して展開する
+- `expand`: 要素ごとに改行して展開する
 - `format`: 1行のまま、キーのクォートと空白だけ整える（`\` の改行は1行に戻す）
 - `none`: 書かれたまま残す（`\` の改行も含む）
-
-`threshold` は `expand` のときの1行の最大文字数（インデントと行末の ` \` を除く）です。収まる要素は同じ行に並べ、全体が収まる場合は1行のままにします。`0` なら要素ごとに改行します。
-
-```mcfunction
-# execute.threshold: 12
-execute \
-    as @a at @s \
-    run say hello
-```
 
 ## コメントによる指定
 
@@ -127,7 +117,7 @@ execute \
 |---|---|
 | なし | 次のコマンド1つ |
 | `-section` | この行より下の、今いる `#` セクションの残り。子セクション（`##` など）には効かないが、子が閉じて戻ってきた後には再び効く。親には効かない |
-| `-deep` | `-section` の範囲と、その子セクション |
+| `-all` | `-section` の範囲と、その子セクション |
 
 `:` の後に `execute` / `selector` / `nbt` / `attached` をカンマ区切りで書くと、その種類だけに効きます（省略するとすべて）。
 
@@ -136,7 +126,7 @@ execute \
 #expand-section
 execute as @a run say 1       ← 展開する
 ## 子
-    execute as @a run say 2   ← 効かない（-deep なら効く）
+    execute as @a run say 2   ← 効かない（-all なら効く）
 
 execute as @a run say 3       ← 処理A に戻ったので再び効く
 
@@ -147,9 +137,9 @@ execute as @a[tag=a,tag=b] at @s run say keep this
 data merge storage a:b {a:1}
 ```
 
-- 複数の指定が重なったら、近いほうが勝つ（次のコマンドへの指定 → 今のセクションの `-section` → 近いセクションの `-deep` の順）。
+- 複数の指定が重なったら、近いほうが勝つ（次のコマンドへの指定 → 今のセクションの `-section` → 近いセクションの `-all` の順）。
 - 次のコマンドへの指定は、続けて書けば重ねられる。間に空行や普通のコメントがあると無効になる。
-- `#ignore` / `#ignore-section` / `#ignore-deep`（種類の指定なし）の範囲では、コメント行や空行も書かれたまま残す。
+- `#ignore` / `#ignore-section` / `#ignore-all`（種類の指定なし）の範囲では、コメント行や空行も書かれたまま残す。
 - 種類を指定した `#ignore:nbt` などは、その種類を `none`（書かれたまま）にするだけで、コマンドの他の部分は整形する。
 
 ## 仕様上の注意

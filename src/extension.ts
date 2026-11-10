@@ -7,7 +7,7 @@ let mcmeta: Mcmeta | undefined;
 async function readOptions(document: vscode.TextDocument, formatting: vscode.FormattingOptions): Promise<FormatOptions> {
     const c = vscode.workspace.getConfiguration('mcfunctionFormatter', document.uri);
     let commands: CommandNode | undefined;
-    if (mcmeta && c.get<boolean>('mcmeta.enabled') && document.uri.scheme === 'file') {
+    if (mcmeta && document.uri.scheme === 'file') {
         commands = await mcmeta.commandsFor(document.uri.fsPath);
     }
     return resolveOptions({
@@ -21,19 +21,16 @@ async function readOptions(document: vscode.TextDocument, formatting: vscode.For
         command: { keepLineBreaks: c.get<boolean>('command.keepLineBreaks') },
         execute: {
             mode: c.get<Mode>('execute.mode'),
-            threshold: c.get<number>('execute.threshold'),
             indentSize: c.get<number>('execute.indentSize'),
         },
         selector: {
             mode: c.get<Mode>('selector.mode'),
-            threshold: c.get<number>('selector.threshold'),
             indentSize: c.get<number>('selector.indentSize'),
             equalsSpaces: c.get<number>('selector.equalsSpaces'),
             commaSpaces: c.get<number>('selector.commaSpaces'),
         },
         nbt: {
             mode: c.get<Mode>('nbt.mode'),
-            threshold: c.get<number>('nbt.threshold'),
             indentSize: c.get<number>('nbt.indentSize'),
             quoteKeys: c.get<boolean>('nbt.quoteKeys'),
             colonSpaces: c.get<number>('nbt.colonSpaces'),

@@ -283,7 +283,7 @@ describe('defaults', () => {
     it('expands execute and NBT but only tidies selectors', () => {
         expect(fmt(['execute as @e[type = zombie, tag=a] run data merge entity @s {a:1,"b" : 2}'])).toEqual([
             'execute \\',
-            '    as @e[type=zombie, tag=a] \\',
+            '    as @e[type=zombie,tag=a] \\',
             '    run data merge entity @s { \\',
             '        a: 1, \\',
             '        "b": 2 \\',
@@ -407,43 +407,6 @@ describe('expand', () => {
     });
 });
 
-describe('threshold', () => {
-    it('packs execute subcommands up to the width', () => {
-        expect(fmt(['execute as @a at @s run say hello'], { execute: { threshold: 12 } })).toEqual([
-            'execute \\',
-            '    as @a at @s \\',
-            '    run say hello',
-        ]);
-    });
-
-    it('keeps the whole command on one line when it fits', () => {
-        expect(fmt(['execute as @a run say hi'], { execute: { threshold: 24 } })).toEqual(['execute as @a run say hi']);
-        expect(fmt(['execute as @a run say hi'], { execute: { threshold: 23 } })).toEqual([
-            'execute \\',
-            '    as @a run say hi',
-        ]);
-    });
-
-    it('packs NBT and selector items, starting a new line after a multi-line item', () => {
-        expect(fmt(['data merge entity @s {a:1,b:2,c:{d:1,e:2,f:3},g:3}'], { nbt: { threshold: 12 } })).toEqual([
-            'data merge entity @s { \\',
-            '    a: 1, b: 2, \\',
-            '    c: { \\',
-            '        d: 1, e: 2, \\',
-            '        f: 3 \\',
-            '    }, \\',
-            '    g: 3 \\',
-            '}',
-        ]);
-        expect(fmt(['kill @e[type=pig,tag=a,tag=b]'], { selector: { mode: 'expand', threshold: 16 } })).toEqual([
-            'kill @e[ \\',
-            '    type=pig, tag=a, \\',
-            '    tag=b \\',
-            ']',
-        ]);
-    });
-});
-
 describe('NBT kept on one line', () => {
     it('inside selectors unless selectors expand', () => {
         expect(fmt(['kill @e[nbt={Tags:["a"]}]'])).toEqual(['kill @e[nbt={Tags: ["a"]}]']);
@@ -517,22 +480,16 @@ describe('spacing', () => {
     });
 
     it('sets the spaces after commas', () => {
-        expect(fmt(['kill @e[type=pig,tag=a]', 'data merge storage a:b {a:[1,2],b:2}'], { selector: { commaSpaces: 0 }, nbt: { mode: 'format', commaSpaces: 2 } }))
+        expect(fmt(['kill @e[type=pig, tag=a]', 'data merge storage a:b {a:[1,2],b:2}'], { nbt: { mode: 'format', commaSpaces: 2 } }))
             .toEqual(['kill @e[type=pig,tag=a]', 'data merge storage a:b {a: [1,  2],  b: 2}']);
+        expect(fmt(['kill @e[type=pig,tag=a]'], { selector: { commaSpaces: 1 } })).toEqual(['kill @e[type=pig, tag=a]']);
         expect(fmt(['kill @e[type=pig ,tag=a,  tag=b]', 'data merge storage a:b {a:1 ,b:2}'], { selector: { commaSpaces: -1 }, nbt: { mode: 'format', commaSpaces: -1 } }))
             .toEqual(['kill @e[type=pig ,tag=a,  tag=b]', 'data merge storage a:b {a: 1 ,b: 2}']);
-        expect(fmt(['data merge storage a:b {a:1,b:2,c:3}'], { nbt: { threshold: 20, commaSpaces: 0 } })).toEqual(['data merge storage a:b {a: 1,b: 2,c: 3}']);
-        expect(fmt(['data merge storage a:b {a:1,b:2,c:3}'], { nbt: { threshold: 10, commaSpaces: 0 } })).toEqual([
-            'data merge storage a:b { \\',
-            '    a: 1,b: 2, \\',
-            '    c: 3 \\',
-            '}',
-        ]);
     });
 
     it('keeps the written spacing at -1', () => {
         expect(fmt(['tp @e[type =pig,tag= ! a] {a :1,b:  2}'], { ...flatAll, selector: { mode: 'format', equalsSpaces: -1 }, nbt: { mode: 'format', colonSpaces: -1 } }))
-            .toEqual(['tp @e[type =pig, tag= ! a] {a :1, b:  2}']);
+            .toEqual(['tp @e[type =pig,tag= ! a] {a :1, b:  2}']);
     });
 });
 
@@ -541,7 +498,7 @@ describe('format', () => {
         expect(fmt([
             'execute as @e[type=zombie,tag=a] \\',
             '    at @s run tellraw @s {text:"hi",\'col\':"red"}',
-        ], { ...flatAll, nbt: { mode: 'format', quoteKeys: true } })).toEqual(['execute as @e[type=zombie, tag=a] at @s run tellraw @s {"text": "hi", "col": "red"}']);
+        ], { ...flatAll, nbt: { mode: 'format', quoteKeys: true } })).toEqual(['execute as @e[type=zombie,tag=a] at @s run tellraw @s {"text": "hi", "col": "red"}']);
     });
 
     it('leaves strings, block states and greedy text alone', () => {
@@ -680,10 +637,10 @@ describe('directives', () => {
         ]);
     });
 
-    it('-deep also applies to child sections', () => {
-        expect(run('#expand-deep: execute')).toEqual([
+    it('-all also applies to child sections', () => {
+        expect(run('#expand-all: execute')).toEqual([
             '# A',
-            '    #expand-deep: execute',
+            '    #expand-all: execute',
             '    execute \\',
             '        as @a \\',
             '        run say 1',
@@ -700,10 +657,10 @@ describe('directives', () => {
         ]);
     });
 
-    it('#ignore-deep leaves commands, comments and indentation as written', () => {
-        expect(fmt(['# A', '#ignore-deep', ' say  1', '## child', 'say {a:1}', '', '', 'say 2'])).toEqual([
+    it('#ignore-all leaves commands, comments and indentation as written', () => {
+        expect(fmt(['# A', '#ignore-all', ' say  1', '## child', 'say {a:1}', '', '', 'say 2'])).toEqual([
             '# A',
-            '    #ignore-deep',
+            '    #ignore-all',
             ' say  1',
             '## child',
             'say {a:1}',

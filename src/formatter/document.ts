@@ -106,10 +106,10 @@ interface Section {
     /** Level of the lines under it (`signs` style only). */
     level: number;
     section: Overrides;
-    deep: Overrides;
+    all: Overrides;
 }
 
-const newSection = (signs: number, level = 0): Section => ({ signs, level, section: {}, deep: {} });
+const newSection = (signs: number, level = 0): Section => ({ signs, level, section: {}, all: {} });
 
 /**
  * Formats every line. How comments indent depends on `indent.style`:
@@ -147,9 +147,9 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
     const indentFor = (level: number, original: string) => (opts.indent.enabled ? unit.repeat(level) : original);
     const current = () => depth[depth.length - 1] ?? root;
     const contentLevel = () => (signsStyle ? signsLevel : depth.length);
-    /** Nearest first: this command, this section, then `-deep` from here up to the root. */
+    /** Nearest first: this command, this section, then `-all` from here up to the root. */
     const overrides = (command: Overrides) =>
-        resolveOverrides([command, current().section, ...[...depth].reverse().map(s => s.deep), root.deep]);
+        resolveOverrides([command, current().section, ...[...depth].reverse().map(s => s.all), root.all]);
     const split = (raw: string) => {
         const trimmed = raw.replace(/^[ \t]+/, '');
         return { trimmed, original: raw.slice(0, raw.length - trimmed.length) };
