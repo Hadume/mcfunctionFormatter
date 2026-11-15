@@ -4,6 +4,10 @@
   "description": "Minecraft Java Edition (1.21+) のデータパック用 mcfunction フォーマッター",
   "version": "0.1.0",
   "publisher": "local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hadume/mcfunctionFormatter.git"
+  },
   "private": true,
   "icon": "images/icon.png",
   "engines": {
@@ -198,7 +202,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "vitest run",
-    "package": "npm run compile && npx --yes @vscode/vsce@3.2.2 package --allow-missing-repository --skip-license"
+    "package": "npm run compile && npx --yes @vscode/vsce@3.2.2 package --skip-license"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
