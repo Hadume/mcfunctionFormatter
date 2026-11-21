@@ -1,7 +1,7 @@
 {
   "name": "mcfunction-formatter",
   "displayName": "mcfunction Formatter",
-  "description": "Minecraft Java Edition (1.21+) のデータパック用 mcfunction フォーマッター",
+  "description": "Formatter for .mcfunction files in Minecraft Java Edition (1.21+) data packs",
   "version": "0.1.0",
   "publisher": "local",
   "license": "MIT",
@@ -42,26 +42,26 @@
           "type": "boolean",
           "default": true,
           "order": 0,
-          "markdownDescription": "`##` 以上の見出しコメントの `#` の数に応じてインデントします (`##` の下は1段、`###` の下は2段。`#` 1個は普通のコメント)。空行1行で1段戻ります。オフにすると各行の元のインデントを保ちます。"
+          "markdownDescription": "Indents lines by the number of `#` in the `##` (or deeper) heading above them: one level under `##`, two under `###`. A single `#` is a plain comment. A blank line goes back one level. When off, each line keeps its original indentation."
         },
         "mcfunctionFormatter.indent.size": {
           "type": "integer",
           "minimum": -1,
           "default": -1,
           "order": 1,
-          "markdownDescription": "`#` インデント1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+          "markdownDescription": "Number of spaces per indentation level. `-1` follows the VS Code indentation setting."
         },
         "mcfunctionFormatter.header.enabled": {
           "type": "boolean",
           "default": true,
           "order": 2,
-          "markdownDescription": "`data/<namespace>/function/<path>.mcfunction` から `#> namespace:path` ヘッダーを挿入します。既存のヘッダーのパスが違う場合は上書きします。"
+          "markdownDescription": "Inserts a `#> namespace:path` header derived from `data/<namespace>/function/<path>.mcfunction`, and overwrites an existing header whose path differs."
         },
         "mcfunctionFormatter.command.keepLineBreaks": {
           "type": "boolean",
           "default": true,
           "order": 9,
-          "markdownDescription": "普通のコマンド (サブコマンドごとに分けない `execute` を含む) で、語と語の間に `\\` で入れた改行を残します。続きの行は1段下げて揃えます。オフにすると1行にまとめます。"
+          "markdownDescription": "In plain commands (including `execute` that is not split into subcommands), keeps the `` line breaks written between words, indenting continuation lines one level. When off, joins them into one line."
         },
         "mcfunctionFormatter.execute.mode": {
           "type": "string",
@@ -71,20 +71,20 @@
             "none"
           ],
           "enumDescriptions": [
-            "サブコマンドごとに改行して展開する",
-            "1行にまとめる",
-            "書かれたまま残す"
+            "Put each subcommand on its own line",
+            "Join into one line",
+            "Keep as written"
           ],
           "default": "expand",
           "order": 10,
-          "description": "execute コマンドの整形方法"
+          "description": "How to format execute commands"
         },
         "mcfunctionFormatter.execute.indentSize": {
           "type": "integer",
           "minimum": -1,
           "default": -1,
           "order": 12,
-          "markdownDescription": "execute の継続行1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+          "markdownDescription": "Number of spaces per level for execute continuation lines. `-1` follows the VS Code indentation setting."
         },
         "mcfunctionFormatter.selector.mode": {
           "type": "string",
@@ -94,34 +94,34 @@
             "none"
           ],
           "enumDescriptions": [
-            "引数ごとに改行して展開する",
-            "1行のまま空白だけ整える",
-            "書かれたまま残す"
+            "Put each argument on its own line",
+            "Keep on one line, only tidy spacing",
+            "Keep as written"
           ],
           "default": "format",
           "order": 20,
-          "markdownDescription": "セレクター (`@e[...]` など) と、その中の `scores={...}` / `advancements={...}` の整形方法"
+          "markdownDescription": "How to format selectors (`@e[...]` etc.) and the `scores={...}` / `advancements={...}` maps inside them"
         },
         "mcfunctionFormatter.selector.indentSize": {
           "type": "integer",
           "minimum": -1,
           "default": -1,
           "order": 22,
-          "markdownDescription": "セレクターを展開したときの1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+          "markdownDescription": "Number of spaces per level when expanding selectors. `-1` follows the VS Code indentation setting."
         },
         "mcfunctionFormatter.selector.equalsSpaces": {
           "type": "integer",
           "minimum": -1,
           "default": 0,
           "order": 23,
-          "markdownDescription": "セレクターの `=` と、ブロックステート・アイテムコンポーネントの `=` / `~` の前後に入れる空白の数 (`1` なら `type = zombie`)。`-1` のときは書かれたままにします。"
+          "markdownDescription": "Number of spaces around `=` in selectors, and around `=` / `~` in block states and item components (`1` gives `type = zombie`). `-1` keeps what was written."
         },
         "mcfunctionFormatter.selector.commaSpaces": {
           "type": "integer",
           "minimum": -1,
           "default": 0,
           "order": 24,
-          "markdownDescription": "セレクターの引数を同じ行に並べるとき、`,` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+          "markdownDescription": "Number of spaces after `,` when selector arguments share a line. `-1` keeps what was written."
         },
         "mcfunctionFormatter.nbt.mode": {
           "type": "string",
@@ -131,40 +131,40 @@
             "none"
           ],
           "enumDescriptions": [
-            "要素ごとに改行して展開する",
-            "1行のままキーのクォートと空白だけ整える",
-            "書かれたまま残す"
+            "Put each element on its own line",
+            "Keep on one line, only quote keys and tidy spacing",
+            "Keep as written"
           ],
           "default": "expand",
           "order": 30,
-          "description": "NBT / JSON (テキストコンポーネント、マクロ引数など) の整形方法"
+          "description": "How to format NBT / JSON (text components, macro arguments, etc.)"
         },
         "mcfunctionFormatter.nbt.indentSize": {
           "type": "integer",
           "minimum": -1,
           "default": -1,
           "order": 32,
-          "markdownDescription": "NBT を展開したときの1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
+          "markdownDescription": "Number of spaces per level when expanding NBT. `-1` follows the VS Code indentation setting."
         },
         "mcfunctionFormatter.nbt.quoteKeys": {
           "type": "boolean",
           "default": false,
           "order": 33,
-          "markdownDescription": "NBT のキーを `\"` でくくります (`{text:\"a\"}` → `{\"text\": \"a\"}`)。"
+          "markdownDescription": "Wraps NBT keys in `\"` (`{text:\"a\"}` → `{\"text\": \"a\"}`)."
         },
         "mcfunctionFormatter.nbt.colonSpaces": {
           "type": "integer",
           "minimum": -1,
           "default": 1,
           "order": 34,
-          "markdownDescription": "NBT のキーの後の `:` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+          "markdownDescription": "Number of spaces after the `:` following an NBT key. `-1` keeps what was written."
         },
         "mcfunctionFormatter.nbt.commaSpaces": {
           "type": "integer",
           "minimum": -1,
           "default": 1,
           "order": 35,
-          "markdownDescription": "NBT の要素を同じ行に並べるとき、`,` の後ろに入れる空白の数。`-1` のときは書かれたままにします。"
+          "markdownDescription": "Number of spaces after `,` when NBT elements share a line. `-1` keeps what was written."
         },
         "mcfunctionFormatter.attached.mode": {
           "type": "string",
@@ -174,13 +174,13 @@
             "none"
           ],
           "enumDescriptions": [
-            "中の NBT を nbt.mode に従って展開する",
-            "1行のまま `=` / `~` の空白と中の NBT だけ整える",
-            "書かれたまま残す"
+            "Expand the NBT inside according to nbt.mode",
+            "Keep on one line, only tidy `=` / `~` spacing and the NBT inside",
+            "Keep as written"
           ],
           "default": "format",
           "order": 40,
-          "markdownDescription": "語にくっついた `{...}` / `[...]` (ブロックステート、アイテムコンポーネント、ブロックエンティティの NBT、`A[{B:true}]` のような NBT パス) の整形方法"
+          "markdownDescription": "How to format `{...}` / `[...]` attached to a word (block states, item components, block entity NBT, NBT paths like `A[{B:true}]`)"
         }
       }
     }
