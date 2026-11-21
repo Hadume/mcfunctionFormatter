@@ -10,7 +10,6 @@ export interface Unit {
     lines: string[];
 }
 
-type LineType = 'none' | 'blank' | 'comment' | 'command';
 
 /** `namespace:path` for a file at `.../data/<namespace>/function/<path>.mcfunction`, or undefined. */
 export function resourceIdFromPath(filePath: string): string | undefined {
@@ -103,7 +102,7 @@ function formatCommand(group: string[], base: string, opts: FormatOptions): stri
 /** One `#` indentation level, with the section directives written in it. */
 interface Section {
     signs: number;
-    /** Level of the lines under it (`signs` style only). */
+    /** Level of the lines under it. */
     level: number;
     section: Overrides;
     all: Overrides;
@@ -112,27 +111,21 @@ interface Section {
 const newSection = (signs: number, level = 0): Section => ({ signs, level, section: {}, all: {} });
 
 /**
- * Formats every line. How comments indent depends on `indent.style`:
- * - `signs`: a `##` (or deeper) heading puts the lines under it at (number of `#`) - 1 levels and
- *   a single `#` is a plain comment. A blank line goes back one indentation level. Headings are
- *   strict: one at most one level deeper than the line before it (more `#` are cut down), and
- *   exactly as many blank lines before it as it takes to come down from the line before it to its
- *   own level (none before a child heading, one before a same-level one, ...). Plain comments
- *   written right above a heading belong to it.
- * - `nested` (the reference McfunctionFormatter): a `#` comment opens a level (one per run of
- *   comments with the same number of `#`) and a blank line closes one.
- * In both, `#>` resets to the top.
+ * Formats every line. A `##` (or deeper) heading puts the lines under it at (number of `#`) - 1
+ * levels and a single `#` is a plain comment. A blank line goes back one indentation level.
+ * Headings are strict: one at most one level deeper than the line before it (more `#` are cut
+ * down), and exactly as many blank lines before it as it takes to come down from the line before
+ * it to its own level (none before a child heading, one before a same-level one, ...). Plain
+ * comments written right above a heading belong to it. `#>` resets to the top.
  */
 export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
     const units: Unit[] = [];
     /** Open sections; `root` holds directives written outside any section. */
     const depth: Section[] = [];
     const root = newSection(0);
-    const signsStyle = opts.indent.style === 'signs';
-    /** `signs` headings rewrite `#` and blank lines; off when indentation is. */
-    const strict = signsStyle && opts.indent.enabled;
-    let last: LineType = 'none';
-    /** Level of commands at this point (`signs` style); may sit between open sections after blank lines. */
+    /** Headings rewrite `#` and blank lines; off when indentation is. */
+    const strict = opts.indent.enabled;
+    /** Level of commands at this point; may sit between open sections after blank lines. */
     let signsLevel = 0;
     /** Right after `#>` and the comments directly under it: the first heading gets one blank line. */
     let afterHeader = false;
@@ -146,7 +139,6 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
     const unit = indentString(opts, opts.indent.size);
     const indentFor = (level: number, original: string) => (opts.indent.enabled ? unit.repeat(level) : original);
     const current = () => depth[depth.length - 1] ?? root;
-    const contentLevel = () => (signsStyle ? signsLevel : depth.length);
     /** Nearest first: this command, this section, then `-all` from here up to the root. */
     const overrides = (command: Overrides) =>
         resolveOverrides([command, current().section, ...[...depth].reverse().map(s => s.all), root.all]);
@@ -160,13 +152,9 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
         return { start: i, end: i, lines: [...(verbatim ? [] : prefix), text] };
     };
     const blankLine = () => {
-        if (signsStyle) {
-            // One indentation level up; sections whose lines sit deeper than that are closed.
-            signsLevel = Math.max(signsLevel - 1, 0);
-            while (depth.length && current().level > signsLevel) depth.pop();
-        } else {
-            depth.pop();
-        }
+        // One indentation level up; sections whose lines sit deeper than that are closed.
+        signsLevel = Math.max(signsLevel - 1, 0);
+        while (depth.length && current().level > signsLevel) depth.pop();
     };
     /** No heading follows: held lines are ordinary blank lines and comments. */
     const release = () => {
@@ -187,7 +175,6 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
 
         if (trimmed.trim() === '') {
             pending = {};
-            last = 'blank';
             inHeaderBlock = false;
             if (strict) {
                 if (heldComments.length) release();
@@ -203,7 +190,7 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
             const signs = /^#+/.exec(trimmed)![0].length;
             const tag = trimmed.slice(signs).split(' ')[0];
             const directive = parseDirective(trimmed);
-            const isHeading = tag === '' && signsStyle && signs >= 2;
+            const isHeading = tag === '' && signs >= 2;
 
             if (strict && (tag === '>' || isHeading)) {
                 // Level of the last line that is not held: blank lines before a heading are rewritten.
@@ -235,7 +222,6 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
                     signsLevel = level + 1;
                 }
                 afterHeader = inHeaderBlock = tag === '>';
-                last = 'comment';
                 pending = {};
                 continue;
             }
@@ -245,12 +231,11 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
                 // Indented like a command; does not end a run of comments.
                 if (directive.scope === 'command') Object.assign(pending, directive.overrides);
                 else Object.assign(current()[directive.scope], directive.overrides);
-                level = contentLevel();
+                level = signsLevel;
             } else if (tag === '>') {
                 depth.length = 0;
                 depth.push(newSection(signs));
                 level = signsLevel = 0;
-                last = 'comment';
                 pending = {};
             } else if (isHeading) {
                 // Only without strict mode (indentation off): levels are tracked, nothing is rewritten.
@@ -258,18 +243,11 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
                 depth.push(newSection(signs, signs - 1));
                 level = signs - 2;
                 signsLevel = signs - 1;
-                last = 'comment';
-                pending = {};
-            } else if (tag === '' && !signsStyle) {
-                if (!(last === 'comment' && depth[depth.length - 1]?.signs === signs)) depth.push(newSection(signs));
-                level = Math.max(depth.length - 1, 0);
-                last = 'comment';
                 pending = {};
             } else {
-                // A plain `#` comment (signs style) or one we do not recognise (e.g. `#define`):
+                // A plain `#` comment or one we do not recognise (e.g. `#define`):
                 // indented like a command.
-                level = contentLevel();
-                last = 'command';
+                level = signsLevel;
                 pending = {};
             }
             if (strict && !inHeaderBlock) {
@@ -287,9 +265,8 @@ export function formatLines(lines: string[], opts: FormatOptions): Unit[] {
         const group = lines.slice(i, end + 1);
         const o = overrides(pending);
         pending = {};
-        const out = o.verbatim ? group : formatCommand(group, indentFor(contentLevel(), original), applyOverrides(opts, o));
+        const out = o.verbatim ? group : formatCommand(group, indentFor(signsLevel, original), applyOverrides(opts, o));
         units.push({ start: i, end, lines: out });
-        last = 'command';
         i = end;
     }
     if (strict) release();

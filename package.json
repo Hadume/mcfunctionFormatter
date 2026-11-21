@@ -42,7 +42,7 @@
           "type": "boolean",
           "default": true,
           "order": 0,
-          "markdownDescription": "コメントの `#` の数に応じてインデントします。オフにすると各行の元のインデントを保ちます。"
+          "markdownDescription": "`##` 以上の見出しコメントの `#` の数に応じてインデントします (`##` の下は1段、`###` の下は2段。`#` 1個は普通のコメント)。空行1行で1段戻ります。オフにすると各行の元のインデントを保ちます。"
         },
         "mcfunctionFormatter.indent.size": {
           "type": "integer",
@@ -50,20 +50,6 @@
           "default": -1,
           "order": 1,
           "markdownDescription": "`#` インデント1段分の空白の数。`-1` のときは VSCode のインデント設定に従います。"
-        },
-        "mcfunctionFormatter.indent.style": {
-          "type": "string",
-          "enum": [
-            "signs",
-            "nested"
-          ],
-          "enumDescriptions": [
-            "`##` 以上の見出しの `#` の数で段数を決める (`##` の下は1段、`###` の下は2段)。`#` 1個は普通のコメント。空行1行でインデントが1段戻る。見出しは1段ずつしか深くできず (多すぎる `#` は減らす)、見出しの前の空行は見出しの高さまで戻るのに必要な数ちょうどにする",
-            "MC-Datapack-Utility と同じ。`#` コメントごとに1段深くなり、空行で1段戻る"
-          ],
-          "default": "signs",
-          "order": 2,
-          "description": "コメントによるインデントの決め方"
         },
         "mcfunctionFormatter.header.enabled": {
           "type": "boolean",

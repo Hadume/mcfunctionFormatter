@@ -23,9 +23,7 @@ Minecraft Java Edition 1.21 以降のデータパック用 `.mcfunction` フォ�
 
 ## インデント
 
-`indent.style` で決め方を選べます。
-
-**`signs`（既定）**: `##` 以上の見出しの `#` の数で段数が決まります（`##` の下は1段、`###` の下は2段）。`#` 1個は普通のコメントで、段数を変えません。
+`##` 以上の見出しの `#` の数で段数が決まります（`##` の下は1段、`###` の下は2段）。`#` 1個は普通のコメントで、段数を変えません。`#>` で段数0に戻ります。
 
 - 空行1行で、インデントが1段戻ります。
 - 見出しは直前の行より1段深いところまでしか置けません。`#` が多すぎる見出し（`## A` の下の `#### B` など）は、`#` を減らして1段深い見出し（`### B`）に直します。
@@ -56,10 +54,6 @@ Minecraft Java Edition 1.21 以降のデータパック用 `.mcfunction` フォ�
 ## E
 ```
 
-**`nested`**: MC-Datapack-Utility と同じ方式です。`#` コメントで1段深くなり、空行で1段戻ります。
-
-どちらも `#>` で段数0に戻ります。
-
 ## 開発
 
 ```bash
@@ -82,7 +76,7 @@ npm run package # mcfunction-formatter-0.1.0.vsix を作る
 
 | 設定 | 既定値 | 内容 |
 |---|---|---|
-| `mcfunctionFormatter.indent.enabled` / `.size` | `true` / `-1` | `#` インデント。オフにすると元のインデントを保つ |
+| `mcfunctionFormatter.indent.enabled` / `.size` | `true` / `-1` | 見出しの `#` の数に応じたインデント。オフにすると元のインデントを保つ |
 | `mcfunctionFormatter.header.enabled` | `true` | ヘッダーの挿入・上書き |
 | `mcfunctionFormatter.command.keepLineBreaks` | `true` | 普通のコマンドで語と語の間に `\` で入れた改行を残す（続きの行は1段下げる）。オフで1行にまとめる |
 | `mcfunctionFormatter.execute.mode` / `.indentSize` | `expand` / `-1` | execute |

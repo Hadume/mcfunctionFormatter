@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CommandNode, FormatOptions, IndentStyle, Mode, formatLines, formatText, resolveOptions, resourceIdFromPath } from './formatter';
+import { CommandNode, FormatOptions, Mode, formatLines, formatText, resolveOptions, resourceIdFromPath } from './formatter';
 import { Mcmeta } from './mcmeta';
 
 let mcmeta: Mcmeta | undefined;
@@ -15,7 +15,6 @@ async function readOptions(document: vscode.TextDocument, formatting: vscode.For
         indent: {
             enabled: c.get<boolean>('indent.enabled'),
             size: c.get<number>('indent.size'),
-            style: c.get<IndentStyle>('indent.style'),
         },
         header: { enabled: c.get<boolean>('header.enabled') },
         command: { keepLineBreaks: c.get<boolean>('command.keepLineBreaks') },

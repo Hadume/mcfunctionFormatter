@@ -1,16 +1,12 @@
 import type { CommandNode } from './commands';
 
 export type Mode = 'expand' | 'format' | 'none';
-export type IndentStyle = 'signs' | 'nested';
 
 export interface FormatOptions {
     /** The editor's indentation unit (e.g. 4 spaces or a tab), used when an `indentSize` is -1. */
     indentUnit: string;
-    /**
-     * `signs`: `##` and deeper headings set the level from their number of `#`; `#` is a plain comment.
-     * `nested`: MC-Datapack-Utility style; any `#` comment opens a level and blank lines close one.
-     */
-    indent: { enabled: boolean; size: number; style: IndentStyle };
+    /** `##` and deeper headings set the level from their number of `#`; `#` is a plain comment. */
+    indent: { enabled: boolean; size: number };
     header: { enabled: boolean };
     /** Commands other than a split `execute`: keep the `\` line breaks written between their words. */
     command: { keepLineBreaks: boolean };
@@ -33,7 +29,7 @@ export type PartialOptions = {
 
 export const defaultOptions: FormatOptions = {
     indentUnit: '    ',
-    indent: { enabled: true, size: -1, style: 'signs' },
+    indent: { enabled: true, size: -1 },
     header: { enabled: true },
     command: { keepLineBreaks: true },
     execute: { mode: 'expand', indentSize: -1 },

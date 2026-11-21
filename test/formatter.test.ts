@@ -3,11 +3,10 @@ import { CommandNode, PartialOptions, formatLines, formatText, resolveOptions, r
 import commands26 from './fixtures/commands-26.3.json';
 
 /**
- * Most tests were written for the `nested` indent style; `signs` tests ask for it explicitly.
- * They run with the 26.3 command tree from misode/mcmeta unless they pass `commands: undefined`.
+ * Tests run with the 26.3 command tree from misode/mcmeta unless they pass `commands: undefined`.
  */
 const options = (partial: PartialOptions = {}) =>
-    resolveOptions({ commands: commands26 as CommandNode, ...partial, indent: { style: 'nested', ...partial.indent } });
+    resolveOptions({ commands: commands26 as CommandNode, ...partial });
 
 const fmt = (input: string[], partial: PartialOptions = {}, resourceId?: string) =>
     formatText(input.join('\n'), options(partial), resourceId).split('\n');
@@ -24,48 +23,18 @@ const expandAll: PartialOptions = {
     nbt: { quoteKeys: true },
 };
 
-describe('# indentation', () => {
-    it('indents by comment level and dedents on blank lines', () => {
-        expect(fmt([
-            '#> foo:bar',
-            '# description',
-            '',
-            '# init',
-            'say a',
-            '## sub',
-            'say b',
-            '',
-            'say c',
-            '',
-            '# next',
-            '  say d',
-        ])).toEqual([
-            '#> foo:bar',
-            '# description',
-            '',
-            '# init',
-            '    say a',
-            '    ## sub',
-            '        say b',
-            '',
-            '    say c',
-            '',
-            '# next',
-            '    say d',
-        ]);
-    });
-
+describe('indentation settings', () => {
     it('treats #define-like lines as commands and ignores comments without a space', () => {
-        expect(fmt(['# a', '#define foo', '#comment', 'say x'])).toEqual(['# a', '    #define foo', '    #comment', '    say x']);
+        expect(fmt(['## a', '#define foo', '#comment', 'say x'])).toEqual(['## a', '    #define foo', '    #comment', '    say x']);
     });
 
     it('keeps original indentation when disabled', () => {
-        expect(fmt(['# a', '  say x', 'say y'], { indent: { enabled: false } })).toEqual(['# a', '  say x', 'say y']);
+        expect(fmt(['## a', '  say x', 'say y'], { indent: { enabled: false } })).toEqual(['## a', '  say x', 'say y']);
     });
 
     it('follows the editor unit at -1 and a fixed size otherwise', () => {
-        expect(fmt(['# a', 'say x'], { indentUnit: '\t' })).toEqual(['# a', '\tsay x']);
-        expect(fmt(['# a', 'say x'], { indentUnit: '\t', indent: { size: 2 } })).toEqual(['# a', '  say x']);
+        expect(fmt(['## a', 'say x'], { indentUnit: '\t' })).toEqual(['## a', '\tsay x']);
+        expect(fmt(['## a', 'say x'], { indentUnit: '\t', indent: { size: 2 } })).toEqual(['## a', '  say x']);
     });
 });
 
@@ -114,8 +83,7 @@ describe('command tree', () => {
     });
 });
 
-describe('signs indentation', () => {
-    const signs: PartialOptions = { indent: { style: 'signs' } };
+describe('heading indentation', () => {
 
     it('is the default', () => {
         expect(formatText('## A\nsay a', resolveOptions())).toBe('## A\n    say a');
@@ -135,7 +103,7 @@ describe('signs indentation', () => {
             'say d',
             '## C',
             'say e',
-        ], signs)).toEqual([
+        ])).toEqual([
             '#> foo:bar',
             '# desc',
             '',
@@ -154,12 +122,12 @@ describe('signs indentation', () => {
     });
 
     it('is idempotent', () => {
-        const once = fmt(['## A', 'say a', '#### B', 'say b', '### C', 'say c', '## D', 'say d', '# about E', '', '', '## E', '#> x:y', 'say e'], signs);
-        expect(fmt(once, signs)).toEqual(once);
+        const once = fmt(['## A', 'say a', '#### B', 'say b', '### C', 'say c', '## D', 'say d', '# about E', '', '', '## E', '#> x:y', 'say e']);
+        expect(fmt(once)).toEqual(once);
     });
 
     it('cuts headings that skip levels down to one level deeper', () => {
-        expect(fmt(['#### A', 'say a', '## B', '##### C', 'say c'], signs)).toEqual([
+        expect(fmt(['#### A', 'say a', '## B', '##### C', 'say c'])).toEqual([
             '## A',
             '    say a',
             '',
@@ -170,7 +138,7 @@ describe('signs indentation', () => {
     });
 
     it('puts exactly the blank lines a heading needs before it', () => {
-        expect(fmt(['## A', 'say a', '', '', '### B', 'say b', '', '', '', '## C', '### D', 'say d', '#> x:y'], signs)).toEqual([
+        expect(fmt(['## A', 'say a', '', '', '### B', 'say b', '', '', '', '## C', '### D', 'say d', '#> x:y'])).toEqual([
             '## A',
             '    say a',
             '    ### B',
@@ -187,11 +155,11 @@ describe('signs indentation', () => {
     });
 
     it('adds a blank line before a same-level heading', () => {
-        expect(fmt(['## A', 'say a', '## B', 'say b'], signs)).toEqual(['## A', '    say a', '', '## B', '    say b']);
+        expect(fmt(['## A', 'say a', '## B', 'say b'])).toEqual(['## A', '    say a', '', '## B', '    say b']);
     });
 
     it('keeps comments right above a heading with it', () => {
-        expect(fmt(['## A', 'say a', '# about B', '#flat', '## B', 'say b', '# loose', '', '## C'], signs)).toEqual([
+        expect(fmt(['## A', 'say a', '# about B', '#flat', '## B', 'say b', '# loose', '', '## C'])).toEqual([
             '## A',
             '    say a',
             '',
@@ -203,11 +171,11 @@ describe('signs indentation', () => {
             '',
             '## C',
         ]);
-        expect(fmt(['#> x:y', '# desc', '## A'], signs)).toEqual(['#> x:y', '# desc', '', '## A']);
+        expect(fmt(['#> x:y', '# desc', '## A'])).toEqual(['#> x:y', '# desc', '', '## A']);
     });
 
     it('goes back one indentation level per blank line', () => {
-        expect(fmt(['## A', '### B', 'say b', '', 'say c', '', 'say d'], signs)).toEqual([
+        expect(fmt(['## A', '### B', 'say b', '', 'say c', '', 'say d'])).toEqual([
             '## A',
             '    ### B',
             '        say b',
@@ -219,7 +187,7 @@ describe('signs indentation', () => {
     });
 
     it('closes one level per blank line', () => {
-        expect(fmt(['## A', 'say a', '### B', 'say b', '', 'say c', '', 'say d'], signs)).toEqual([
+        expect(fmt(['## A', 'say a', '### B', 'say b', '', 'say c', '', 'say d'])).toEqual([
             '## A',
             '    say a',
             '    ### B',
@@ -240,7 +208,7 @@ describe('signs indentation', () => {
             'execute as @a run say 2',
             '## C',
             'execute as @a run say 3',
-        ], { ...signs, ...flatAll })).toEqual([
+        ], flatAll)).toEqual([
             '## A',
             '    #expand-section:execute',
             '    execute \\',
@@ -256,7 +224,7 @@ describe('signs indentation', () => {
     });
 
     it('does not add blank lines when indentation is disabled', () => {
-        expect(fmt(['### A', 'say a', '## B'], { indent: { style: 'signs', enabled: false } })).toEqual(['### A', 'say a', '## B']);
+        expect(fmt(['### A', 'say a', '## B'], { indent: { enabled: false } })).toEqual(['### A', 'say a', '## B']);
     });
 });
 
@@ -296,14 +264,14 @@ describe('expand', () => {
     const input = [
         '#> foo:bar',
         '',
-        '# init',
+        '## init',
         'execute as @e[type=zombie,tag=a,scores={hp=..10}] at @s run tellraw @s {text:"hi",color:"red"}',
         'function foo:macro {name:"a",list:[1,2]}',
     ];
     const expected = [
         '#> foo:bar',
         '',
-        '# init',
+        '## init',
         '    execute \\',
         '        as @e[ \\',
         '            type = zombie, \\',
@@ -541,8 +509,8 @@ describe('broken structure', () => {
     });
 
     it('does not join when the brackets never close', () => {
-        expect(fmt(['# a', 'tellraw @a {text:"a"', 'say b', '', 'say c'])).toEqual(['# a', '    tellraw @a {text:"a"', '    say b', '', 'say c']);
-        expect(fmt(['tellraw @a {text:"a"', '# comment', '}'])).toEqual(['tellraw @a {text:"a"', '# comment', '    }']);
+        expect(fmt(['## a', 'tellraw @a {text:"a"', 'say b', '', 'say c'])).toEqual(['## a', '    tellraw @a {text:"a"', '    say b', '', 'say c']);
+        expect(fmt(['tellraw @a {text:"a"', '# comment', '}'])).toEqual(['tellraw @a {text:"a"', '# comment', '}']);
     });
 
     it('does not count brackets in free text', () => {
@@ -550,7 +518,7 @@ describe('broken structure', () => {
     });
 
     it('leaves the part it cannot parse as written and formats the rest', () => {
-        expect(fmt(['# a', 'data merge storage a:b { \\', '  a 1 \\', '}'])).toEqual(['# a', '    data merge storage a:b { \\', '  a 1 \\', '}']);
+        expect(fmt(['## a', 'data merge storage a:b { \\', '  a 1 \\', '}'])).toEqual(['## a', '    data merge storage a:b { \\', '  a 1 \\', '}']);
         expect(fmt(['execute as @e[type=pig \\', '  at @s run say hi'])).toEqual(['execute \\', '    as @e[type=pig \\', '  at @s run say hi']);
         expect(fmt(['execute as @a at @s run data merge storage a:b {a 1,b:{c:1}}'])).toEqual([
             'execute \\',
@@ -583,13 +551,13 @@ describe('none', () => {
 describe('#ignore', () => {
     it('leaves the next command exactly as written', () => {
         expect(fmt([
-            '# a',
+            '## a',
             '#ignore',
             'execute as @a \\',
             '      run data merge entity @s {a:1}',
             'execute as @a run say hi',
         ])).toEqual([
-            '# a',
+            '## a',
             '    #ignore',
             'execute as @a \\',
             '      run data merge entity @s {a:1}',
@@ -607,10 +575,10 @@ describe('#ignore', () => {
 
 describe('directives', () => {
     const section = [
-        '# A',
+        '## A',
         '#DIRECTIVE',
         'execute as @a run say 1',
-        '## child',
+        '### child',
         'execute as @a run say 2',
         '',
         'execute as @a run say 3',
@@ -621,12 +589,12 @@ describe('directives', () => {
 
     it('-section applies to the rest of the section, skipping child sections', () => {
         expect(run('#expand-section:execute')).toEqual([
-            '# A',
+            '## A',
             '    #expand-section:execute',
             '    execute \\',
             '        as @a \\',
             '        run say 1',
-            '    ## child',
+            '    ### child',
             '        execute as @a run say 2',
             '',
             '    execute \\',
@@ -639,12 +607,12 @@ describe('directives', () => {
 
     it('-all also applies to child sections', () => {
         expect(run('#expand-all: execute')).toEqual([
-            '# A',
+            '## A',
             '    #expand-all: execute',
             '    execute \\',
             '        as @a \\',
             '        run say 1',
-            '    ## child',
+            '    ### child',
             '        execute \\',
             '            as @a \\',
             '            run say 2',
@@ -658,11 +626,11 @@ describe('directives', () => {
     });
 
     it('#ignore-all leaves commands, comments and indentation as written', () => {
-        expect(fmt(['# A', '#ignore-all', ' say  1', '## child', 'say {a:1}', '', '', 'say 2'])).toEqual([
-            '# A',
+        expect(fmt(['## A', '#ignore-all', ' say  1', '### child', 'say {a:1}', '', '', 'say 2'])).toEqual([
+            '## A',
             '    #ignore-all',
             ' say  1',
-            '## child',
+            '### child',
             'say {a:1}',
             '',
             '',
@@ -705,9 +673,9 @@ describe('directives', () => {
 
 describe('range units', () => {
     it('groups continued lines into one unit', () => {
-        const units = formatLines(['# a', 'execute as @a \\', '  run say hi', 'say b'], options(flatAll));
+        const units = formatLines(['## a', 'execute as @a \\', '  run say hi', 'say b'], options(flatAll));
         expect(units.map(u => [u.start, u.end, u.lines])).toEqual([
-            [0, 0, ['# a']],
+            [0, 0, ['## a']],
             [1, 2, ['    execute as @a run say hi']],
             [3, 3, ['    say b']],
         ]);
@@ -715,5 +683,5 @@ describe('range units', () => {
 });
 
 it('keeps CRLF line endings', () => {
-    expect(formatText('# a\r\nsay x\r\n', options())).toBe('# a\r\n    say x\r\n');
+    expect(formatText('## a\r\nsay x\r\n', options())).toBe('## a\r\n    say x\r\n');
 });
